@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/iwondory/udpserver/collectors"
-	"github.com/iwondory/udpserver/engine"
+	"github.com/iwondory/agent_manager/collectors"
+	"github.com/iwondory/agent_manager/engine"
 )
 
 const (
@@ -21,7 +21,7 @@ const (
 	DefaultBatchSize       = 4
 	DefaultBatchDuration   = 3000
 	DefaultBatchMaxPending = 3
-	DefaultUDPPort         = "localhost:514"
+	DefaultUDPPort         = "localhost:19902"
 	DefaultInputFormat     = "syslog"
 	DefaultMonitorIface    = "localhost:8080"
 )

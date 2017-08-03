@@ -10,8 +10,8 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/iwondory/udpserver/event"
-	"github.com/iwondory/udpserver/libs"
+	"github.com/iwondory/agent_manager/event"
+	"github.com/iwondory/agent_manager/libs"
 )
 
 var (

@@ -3,7 +3,7 @@ package collectors
 import (
 	"net"
 
-	"github.com/iwondory/udpserver/event"
+	"github.com/iwondory/agent_manager/event"
 )
 
 type AgentCollector struct {
