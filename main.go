@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	//	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,7 +14,6 @@ import (
 
 	"github.com/iwondory/udpserver/collectors"
 	"github.com/iwondory/udpserver/engine"
-	//	"github.com/iwondory/udpserver/event"
 )
 
 const (

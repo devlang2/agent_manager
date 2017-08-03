@@ -6,7 +6,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/iwondory/udpserver/event"
-	"github.com/nanobox-io/golang-syslogparser/rfc5424"
+	//	"github.com/nanobox-io/golang-syslogparser/rfc5424"
 )
 
 const (
@@ -34,19 +34,21 @@ func (s *UDPCollector) Start(c chan<- *event.Event) error {
 				continue
 			}
 
-			p := rfc5424.NewParser(buf[:n])
-			err = p.Parse()
-			if err != nil {
-				log.Printf("Parse error: " + err.Error())
-				continue
-			}
+			spew.Dump(buf)
 
-			event := event.NewEvent()
-			event.Data = p.Dump()
-			event.Addr = addr
-			event.Origin = string(buf[:n]) // Original message
+			//			p := rfc5424.NewParser(buf[:n])
+			//			err = p.Parse()
+			//			if err != nil {
+			//				log.Printf("Parse error: " + err.Error())
+			//				continue
+			//			}
 
-			c <- event
+			//			event := event.NewEvent()
+			//			event.Data = p.Dump()
+			//			event.Addr = addr
+			//			event.Origin = string(buf[:n]) // Original message
+
+			//			c <- event
 		}
 	}()
 	return nil
