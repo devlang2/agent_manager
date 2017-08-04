@@ -18,9 +18,9 @@ import (
 
 const (
 	DefaultDataDir         = "./temp"
-	DefaultBatchSize       = 4
-	DefaultBatchDuration   = 3000
-	DefaultBatchMaxPending = 3
+	DefaultBatchSize       = 300
+	DefaultBatchDuration   = 5000
+	DefaultBatchMaxPending = 1000
 	DefaultUDPPort         = "localhost:19902"
 	DefaultInputFormat     = "syslog"
 	DefaultMonitorIface    = "localhost:8080"

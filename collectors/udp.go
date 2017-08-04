@@ -1,14 +1,15 @@
 package collectors
 
 import (
-	"crypto/aes"
-	"crypto/cipher"
+	"bytes"
+	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/iwondory/agent_manager/event"
-	//	"github.com/nanobox-io/golang-syslogparser/rfc5424"
+	"github.com/iwondory/agent_manager/libs"
 )
 
 const (
@@ -16,8 +17,9 @@ const (
 )
 
 var (
-	iv  = []byte("2981eeca66b5c3cd")
-	key = []byte("c43ac86d84469030f28c0a9656b1c533")
+	iv  = []byte("2981eeca66b5c3cd")                 // internal vector
+	key = []byte("c43ac86d84469030f28c0a9656b1c533") // key
+	fs  = []byte("|")                                // field separator
 )
 
 type UDPCollector struct {
@@ -25,8 +27,7 @@ type UDPCollector struct {
 	addr   *net.UDPAddr
 }
 
-func (s *UDPCollector) Start(c chan<- *event.Event) error {
-	spew.Dump()
+func (s *UDPCollector) Start(c chan<- *event.Agent) error {
 	conn, err := net.ListenUDP("udp", s.addr)
 	if err != nil {
 		return err
@@ -35,59 +36,27 @@ func (s *UDPCollector) Start(c chan<- *event.Event) error {
 	go func() {
 		buf := make([]byte, msgBufSize)
 		for {
-			n, _, err := conn.ReadFromUDP(buf)
+			n, addr, err := conn.ReadFromUDP(buf)
 			if err != nil {
 				log.Printf("Read error: " + err.Error())
 				continue
 			}
 
-			block, err := aes.NewCipher(key)
+			data_enc := buf[:n]
+			data_dec, err := libs.Decrypt(key, iv, data_enc)
 			if err != nil {
-				panic(err)
+				log.Printf("Decryption error: " + err.Error())
+				continue
 			}
 
-			//    // The IV needs to be unique, but not secure. Therefore it's common to
-			//    // include it at the beginning of the ciphertext.
-			//    if len(ciphertext) < aes.BlockSize {
-			//        panic("ciphertext too short")
-			//    }
-
-			//    // CBC mode always works in whole blocks.
-			//    if len(ciphertext)%aes.BlockSize != 0 {
-			//        panic("ciphertext is not a multiple of the block size")
-			//    }
-
-			//    mode := cipher.NewCBCDecrypter(block, iv)
-
-			//    // CryptBlocks can work in-place if the two arguments are the same.
-			//    mode.CryptBlocks(ciphertext, ciphertext)
-
-			//    // If the original plaintext lengths are not a multiple of the block
-			//    // size, padding would have to be added when encrypting, which would be
-			//    // removed at this point. For an example, see
-			//    // https://tools.ietf.org/html/rfc5246#section-6.2.3.2. However, it's
-			//    // critical to note that ciphertexts must be authenticated (i.e. by
-			//    // using crypto/hmac) before being decrypted in order to avoid creating
-			//    // a padding oracle.
-
-			//    fmt.Printf("%s\n", ciphertext)
-
-			//			spew.Dump(buf[:n])
-			//            text := decrypt(buf[:n])
-
-			//			p := rfc5424.NewParser(buf[:n])
-			//			err = p.Parse()
-			//			if err != nil {
-			//				log.Printf("Parse error: " + err.Error())
-			//				continue
-			//			}
-
-			//			event := event.NewEvent()
-			//			event.Data = p.Dump()
-			//			event.Addr = addr
-			//			event.Origin = string(buf[:n]) // Original message
-
-			//			c <- event
+			agent, err := parse(data_dec)
+			if err != nil {
+				log.Printf("Parse error: " + err.Error())
+				continue
+			}
+			spew.Dump(agent)
+			agent.IP = addr.IP
+			c <- agent
 		}
 	}()
 	return nil
@@ -95,4 +64,27 @@ func (s *UDPCollector) Start(c chan<- *event.Event) error {
 
 func (s *UDPCollector) Addr() net.Addr {
 	return s.addr
+}
+
+func parse(b []byte) (*event.Agent, error) {
+	cols := bytes.Split(b, fs)
+	spew.Dump(cols)
+	if len(cols) != 9 {
+		return nil, fmt.Errorf("Invalid columns")
+	}
+
+	agent := event.Agent{
+		Guid:               string(cols[1]),
+		OsVersionNumber:    libs.ByteToFloat64(cols[4]),
+		OsBit:              libs.ByteToInt64(cols[6]),
+		OsIsServer:         libs.ByteToInt64(cols[5]),
+		ComputerName:       string(cols[3]),
+		Eth:                string(cols[2]),
+		FullPolicyVersion:  string(cols[7]),
+		TodayPolicyVersion: string(cols[8]),
+		Rdate:              time.Now(),
+		Udate:              time.Now(),
+	}
+
+	return &agent, nil
 }

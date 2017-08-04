@@ -10,7 +10,7 @@ import (
 )
 
 type Collector interface {
-	Start(chan<- *event.Event) error
+	Start(chan<- *event.Agent) error
 	Addr() net.Addr
 }
 
