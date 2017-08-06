@@ -1,38 +1,79 @@
 package libs
 
 import (
+	//	"bytes"
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
+	"errors"
+	"io"
 	"strconv"
+
+	//	"github.com/davecgh/go-spew/spew"
 	//	"encoding/binary"
-	"fmt"
+	//	"fmt"
 	//	"math"
 )
 
-func Encrypt(key, iv, data []byte) ([]byte, error) {
-	return key, nil
+func Encrypt(key, plaintext []byte) ([]byte, error) {
+	plaintext = pad(plaintext)
+	if len(plaintext)%aes.BlockSize != 0 {
+		return nil, errors.New("plaintext is not a multiple of the block size")
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		panic(err)
+	}
+
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
+	return ciphertext, nil
 }
 
-func Decrypt(key, iv, data []byte) ([]byte, error) {
+func Decrypt(key, ciphertext []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return []byte(""), err
 	}
 
-	if len(data) < aes.BlockSize {
-		return []byte(""), fmt.Errorf("ciphertext too short")
+	if len(ciphertext) < aes.BlockSize {
+		return []byte(""), errors.New("ciphertext too short")
 	}
+	iv := ciphertext[:aes.BlockSize]
+	data := make([]byte, len(ciphertext)-aes.BlockSize)
+	copy(data, ciphertext[aes.BlockSize:])
 
-	if len(data)%aes.BlockSize != 0 {
-		return []byte(""), fmt.Errorf("ciphertext is not a multiple of the block size")
+	if len(ciphertext[aes.BlockSize:])%aes.BlockSize != 0 {
+		return []byte(""), errors.New("ciphertext is not a multiple of the block size")
 	}
 
 	mode := cipher.NewCBCDecrypter(block, iv)
-	mode.CryptBlocks(data, data)
+	mode.CryptBlocks(data, ciphertext[aes.BlockSize:])
+	return unpad(data)
+}
 
-	return bytes.Trim(data, "\x0e"), nil
+func pad(src []byte) []byte {
+	padding := aes.BlockSize - len(src)%aes.BlockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(src, padtext...)
+}
 
+func unpad(src []byte) ([]byte, error) {
+	length := len(src)              // 144
+	unpadding := int(src[length-1]) // 14
+
+	if unpadding > length {
+		return nil, errors.New("Unpad error. This could happen when incorrect encryption key is used")
+	}
+	return src[:(length - unpadding)], nil
 }
 
 func ByteToFloat64(b []byte) float64 {

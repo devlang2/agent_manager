@@ -18,7 +18,7 @@ import (
 
 const (
 	DefaultDataDir         = "./temp"
-	DefaultBatchSize       = 300
+	DefaultBatchSize       = 1000
 	DefaultBatchDuration   = 5000
 	DefaultBatchMaxPending = 1000
 	DefaultUDPPort         = "localhost:19902"

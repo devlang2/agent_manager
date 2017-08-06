@@ -37,13 +37,14 @@ func (s *UDPCollector) Start(c chan<- *event.Agent) error {
 		buf := make([]byte, msgBufSize)
 		for {
 			n, addr, err := conn.ReadFromUDP(buf)
+			//			spew.Dump(buf[:n])
 			if err != nil {
 				log.Printf("Read error: " + err.Error())
 				continue
 			}
 
-			data_enc := buf[:n]
-			data_dec, err := libs.Decrypt(key, iv, data_enc)
+			data_enc := append(iv, buf[:n]...)
+			data_dec, err := libs.Decrypt(key, data_enc)
 			if err != nil {
 				log.Printf("Decryption error: " + err.Error())
 				continue
@@ -51,12 +52,19 @@ func (s *UDPCollector) Start(c chan<- *event.Agent) error {
 
 			agent, err := parse(data_dec)
 			if err != nil {
+				spew.Println("################################### Start")
 				log.Printf("Parse error: " + err.Error())
+				spew.Dump(buf[:n])
+				//				spew.Println(string(b))
+				spew.Dump(data_dec)
+				spew.Dump(string(data_dec))
+				spew.Println("################################### End")
 				continue
 			}
-			spew.Dump(agent)
 			agent.IP = addr.IP
 			c <- agent
+			//			buf = nil
+			//			buf = make([]byte, msgBufSize)
 		}
 	}()
 	return nil
@@ -68,9 +76,13 @@ func (s *UDPCollector) Addr() net.Addr {
 
 func parse(b []byte) (*event.Agent, error) {
 	cols := bytes.Split(b, fs)
-	spew.Dump(cols)
+
 	if len(cols) != 9 {
-		return nil, fmt.Errorf("Invalid columns")
+		return nil, fmt.Errorf(" Invalid columns")
+	} else {
+		//		spew.Println(string(b))
+		//		spew.Dump(b)
+		//		spew.Dump(cols)
 	}
 
 	agent := event.Agent{
