@@ -13,6 +13,7 @@ import (
 	"github.com/devlang2/agent_manager/event"
 	"github.com/devlang2/golibs/network"
 	_ "github.com/go-sql-driver/mysql"
+	//	"github.com/op/go-logging"
 )
 
 var (
@@ -33,7 +34,8 @@ type Batcher struct {
 }
 
 func init() {
-	initDatabase("root:sniper123!@#@tcp(aptxa:3306)/aptxam?charset=utf8&allowAllFiles=true")
+	//	log.Critical("crit")
+	//initDatabase("root:sniper123!@#@tcp(aptxa:3306)/aptxam?charset=utf8&allowAllFiles=true")
 }
 
 func NewBatcher(duration time.Duration, size, maxpending int, datadir string) *Batcher {
@@ -67,7 +69,6 @@ func (this *Batcher) Start(errChan chan<- error) error {
 			queue = make([]*event.Agent, 0, this.size)
 
 			log.Printf("Updated : %d", affectedRows)
-
 		}
 
 		for {
@@ -159,8 +160,7 @@ func saveAsFile(datadir string, queue []*event.Agent) (*os.File, error) {
 	return tmpfile, nil
 }
 
-func initDatabase(dataSourceName string) {
-	log.Println("Initialize database..")
+func InitDatabase(dataSourceName string) {
 	var err error
 	db, err = sql.Open("mysql", dataSourceName)
 	if err != nil {

@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"expvar"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -14,6 +16,7 @@ import (
 
 	"github.com/devlang2/agent_manager/collectors"
 	"github.com/devlang2/agent_manager/engine"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 const (
@@ -21,7 +24,7 @@ const (
 	DefaultBatchSize       = 2000
 	DefaultBatchDuration   = 5000
 	DefaultBatchMaxPending = 10000
-	DefaultUDPPort         = "localhost:19902"
+	DefaultUDPPort         = ":19902"
 	DefaultInputFormat     = "syslog"
 	DefaultMonitorIface    = "localhost:8080"
 )
@@ -31,8 +34,17 @@ var (
 	fs    *flag.FlagSet
 )
 
+type Config struct {
+	Database struct {
+		Host     string `json:"host"`
+		Username string `json:"username"`
+		Database string `json:"database"`
+		Port     string `json:"port"`
+		Password string `json:"password"`
+	} `json:"database"`
+}
+
 func main() {
-	// Set CPU count
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// Flag set
@@ -46,8 +58,23 @@ func main() {
 		datadir         = fs.String("datadir", DefaultDataDir, "Set data directory")
 		monitorIface    = fs.String("monitor", DefaultMonitorIface, "TCP Bind address for monitoring server in the form host:port.")
 	)
+	fs.Usage = printHelp
+	fs.Parse(os.Args[1:])
 
-	log.Printf("Size: %d, Duration: %dms, MaxPending: %d\n", *batchSize, *batchDuration, *batchMaxPending)
+	// Load configuration
+	config, err := loadConfig("config.json")
+	if err != nil {
+		panic(err.Error())
+	}
+	mw := io.MultiWriter(os.Stderr, &lumberjack.Logger{
+		Filename:   "server.log",
+		MaxSize:    1, // megabytes
+		MaxBackups: 3,
+		MaxAge:     1, //days
+	})
+	log.SetOutput(mw)
+
+	log.Printf("Starting server.. (Size: %d, Duration: %dms, MaxPending: %d)\n", *batchSize, *batchDuration, *batchMaxPending)
 
 	// Start engine
 	duration := time.Duration(*batchDuration) * time.Millisecond
@@ -55,6 +82,10 @@ func main() {
 	errChan := make(chan error)
 	batcher.Start(errChan)
 	go logDrain("error", errChan)
+
+	// Connect to database
+	connStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&allowAllFiles=true", config.Database.Username, config.Database.Password, config.Database.Host, config.Database.Port, config.Database.Database)
+	engine.InitDatabase(connStr)
 
 	// Start UDP collector
 	if err := startUDPCollector(*udpIface, *inputFormat, batcher); err != nil {
@@ -93,7 +124,7 @@ func waitForSignals() {
 	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
 	select {
 	case <-signalCh:
-		log.Println("signal received, shutting down...")
+		log.Println("Stopping server..")
 	}
 }
 
@@ -107,4 +138,21 @@ func startUDPCollector(iface, format string, batcher *engine.Batcher) error {
 	}
 
 	return nil
+}
+
+func printHelp() {
+	fmt.Println("amserver [options]")
+	fs.PrintDefaults()
+}
+
+func loadConfig(file string) (Config, error) {
+	var config Config
+	configFile, err := os.Open(file)
+	defer configFile.Close()
+	if err != nil {
+		return config, err
+	}
+	jsonParser := json.NewDecoder(configFile)
+	jsonParser.Decode(&config)
+	return config, nil
 }
