@@ -18,9 +18,9 @@ import (
 
 const (
 	DefaultDataDir         = "./temp"
-	DefaultBatchSize       = 1000
+	DefaultBatchSize       = 2000
 	DefaultBatchDuration   = 5000
-	DefaultBatchMaxPending = 1000
+	DefaultBatchMaxPending = 10000
 	DefaultUDPPort         = "localhost:19902"
 	DefaultInputFormat     = "syslog"
 	DefaultMonitorIface    = "localhost:8080"
@@ -46,6 +46,8 @@ func main() {
 		datadir         = fs.String("datadir", DefaultDataDir, "Set data directory")
 		monitorIface    = fs.String("monitor", DefaultMonitorIface, "TCP Bind address for monitoring server in the form host:port.")
 	)
+
+	log.Printf("CPU: %d, Size: %d, Duration: %dms, MaxPending: %d\n", *batchSize, *batchDuration, *batchMaxPending)
 
 	// Start engine
 	duration := time.Duration(*batchDuration) * time.Millisecond

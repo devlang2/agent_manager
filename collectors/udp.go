@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/iwondory/agent_manager/event"
-	"github.com/iwondory/agent_manager/libs"
+	"github.com/iwondory/encryption"
 )
 
 const (
@@ -43,8 +44,8 @@ func (s *UDPCollector) Start(c chan<- *event.Agent) error {
 				continue
 			}
 
-			data_enc := append(iv, buf[:n]...)
-			data_dec, err := libs.Decrypt(key, data_enc)
+			//			data_enc := append(iv, buf[:n]...)
+			data_dec, err := encryption.Decrypt(key, buf[:n])
 			if err != nil {
 				log.Printf("Decryption error: " + err.Error())
 				continue
@@ -87,9 +88,9 @@ func parse(b []byte) (*event.Agent, error) {
 
 	agent := event.Agent{
 		Guid:               string(cols[1]),
-		OsVersionNumber:    libs.ByteToFloat64(cols[4]),
-		OsBit:              libs.ByteToInt64(cols[6]),
-		OsIsServer:         libs.ByteToInt64(cols[5]),
+		OsVersionNumber:    ByteToFloat64(cols[4]),
+		OsBit:              ByteToInt64(cols[6]),
+		OsIsServer:         ByteToInt64(cols[5]),
 		ComputerName:       string(cols[3]),
 		Eth:                string(cols[2]),
 		FullPolicyVersion:  string(cols[7]),
@@ -99,4 +100,15 @@ func parse(b []byte) (*event.Agent, error) {
 	}
 
 	return &agent, nil
+}
+
+func ByteToFloat64(b []byte) float64 {
+	f, _ := strconv.ParseFloat(string(b), 64)
+	return f
+}
+
+func ByteToInt64(b []byte) int64 {
+	str := string(b)
+	i, _ := strconv.ParseInt(str, 10, 64)
+	return i
 }

@@ -34,7 +34,7 @@ type Batcher struct {
 }
 
 func init() {
-	initDatabase("sniper:sniper123!@#@tcp(aptxa:3306)/awserver?charset=utf8&allowAllFiles=true")
+	initDatabase("root:sniper123!@#@tcp(aptxa:3306)/aptxam?charset=utf8&allowAllFiles=true")
 }
 
 func NewBatcher(duration time.Duration, size, maxpending int, datadir string) *Batcher {
