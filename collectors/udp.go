@@ -44,8 +44,8 @@ func (s *UDPCollector) Start(c chan<- *event.Agent) error {
 				continue
 			}
 
-			//			data_enc := append(iv, buf[:n]...)
-			data_dec, err := encryption.Decrypt(key, buf[:n])
+			data_enc := append(iv, buf[:n]...)
+			data_dec, err := encryption.Decrypt(key, data_enc)
 			if err != nil {
 				log.Printf("Decryption error: " + err.Error())
 				continue

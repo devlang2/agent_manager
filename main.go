@@ -47,7 +47,7 @@ func main() {
 		monitorIface    = fs.String("monitor", DefaultMonitorIface, "TCP Bind address for monitoring server in the form host:port.")
 	)
 
-	log.Printf("CPU: %d, Size: %d, Duration: %dms, MaxPending: %d\n", *batchSize, *batchDuration, *batchMaxPending)
+	log.Printf("Size: %d, Duration: %dms, MaxPending: %d\n", *batchSize, *batchDuration, *batchMaxPending)
 
 	// Start engine
 	duration := time.Duration(*batchDuration) * time.Millisecond
