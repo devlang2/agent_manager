@@ -24,7 +24,7 @@ const (
 	DefaultBatchSize       = 2000
 	DefaultBatchDuration   = 5000
 	DefaultBatchMaxPending = 10000
-	DefaultUDPPort         = ":19902"
+	DefaultUDPPort         = "localhost:19902"
 	DefaultInputFormat     = "syslog"
 	DefaultMonitorIface    = "localhost:8080"
 )

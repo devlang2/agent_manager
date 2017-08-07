@@ -1,6 +1,6 @@
 {
     "database": {
-        "host": "127.0.0.1",
+        "host": "aptxa",
         "port": "3306",
         "database": "aptxam",
         "username": "root",
