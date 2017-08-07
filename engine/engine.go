@@ -10,10 +10,9 @@ import (
 	"strings"
 	"time"
 
-	//	"github.com/davecgh/go-spew/spew"
+	"github.com/devlang2/agent_manager/event"
+	"github.com/devlang2/golibs/network"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/iwondory/agent_manager/event"
-	"github.com/iwondory/agent_manager/libs"
 )
 
 var (
@@ -106,7 +105,7 @@ func insert(queue []*event.Agent) (sql.Result, error) {
 	for _, a := range queue {
 		q := fmt.Sprintf("('%s',%d,%.1f,%d,%d,'%s','%s','%s','%s','%s','%s')",
 			a.Guid,
-			libs.IpToInt32(a.IP),
+			network.IpToInt32(a.IP),
 			a.OsVersionNumber,
 			a.OsBit,
 			a.OsIsServer,

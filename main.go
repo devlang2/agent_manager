@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/iwondory/agent_manager/collectors"
-	"github.com/iwondory/agent_manager/engine"
+	"github.com/devlang2/agent_manager/collectors"
+	"github.com/devlang2/agent_manager/engine"
 )
 
 const (

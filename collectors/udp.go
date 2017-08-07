@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/iwondory/agent_manager/event"
-	"github.com/iwondory/encryption"
+	"github.com/devlang2/agent_manager/event"
+	"github.com/devlang2/golibs/encryption"
 )
 
 const (
