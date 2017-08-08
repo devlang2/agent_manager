@@ -57,6 +57,7 @@ func main() {
 		inputFormat     = fs.String("input", DefaultInputFormat, "Message format of input (only syslog supported)")
 		datadir         = fs.String("datadir", DefaultDataDir, "Set data directory")
 		monitorIface    = fs.String("monitor", DefaultMonitorIface, "TCP Bind address for monitoring server in the form host:port.")
+		debug           = fs.Bool("debug", false, "Debug mode")
 	)
 	fs.Usage = printHelp
 	fs.Parse(os.Args[1:])
@@ -66,21 +67,23 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
+
+	// Set log output
 	mw := io.MultiWriter(os.Stderr, &lumberjack.Logger{
 		Filename:   "server.log",
-		MaxSize:    1, // megabytes
+		MaxSize:    1, // MB
 		MaxBackups: 3,
 		MaxAge:     1, //days
 	})
 	log.SetOutput(mw)
 
-	log.Printf("Starting server.. (Size: %d, Duration: %dms, MaxPending: %d)\n", *batchSize, *batchDuration, *batchMaxPending)
+	log.Printf("Starting server.. (batchSize: %d, batchDuration: %dms, batchMaxPending: %d)\n", *batchSize, *batchDuration, *batchMaxPending)
 
 	// Start engine
 	duration := time.Duration(*batchDuration) * time.Millisecond
 	batcher := engine.NewBatcher(duration, *batchSize, *batchMaxPending, *datadir)
 	errChan := make(chan error)
-	batcher.Start(errChan)
+	batcher.Start(errChan, debug)
 	go logDrain("error", errChan)
 
 	// Connect to database

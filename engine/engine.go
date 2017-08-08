@@ -47,7 +47,7 @@ func NewBatcher(duration time.Duration, size, maxpending int, datadir string) *B
 	}
 }
 
-func (this *Batcher) Start(errChan chan<- error) error {
+func (this *Batcher) Start(errChan chan<- error, debug *bool) error {
 	// Create data directory
 	if _, err := os.Stat(this.datadir); os.IsNotExist(err) {
 		os.Mkdir(this.datadir, 0755)
@@ -59,16 +59,19 @@ func (this *Batcher) Start(errChan chan<- error) error {
 
 		queue := make([]*event.Agent, 0, this.size)
 		save := func() {
-			result, err := insert(queue)
+			_, err := insert(queue)
 			if err != nil {
+				stats.Add("insertFailed", 1)
 				errChan <- err
 				return
 			}
-			affectedRows, _ := result.RowsAffected()
-			stats.Add("eventsCollected", int64(len(queue)))
+			count := int64(len(queue))
+			stats.Add("eventsCollected", count)
 			queue = make([]*event.Agent, 0, this.size)
 
-			log.Printf("Updated : %d", affectedRows)
+			if *debug {
+				log.Printf("Updated: %d (Total: %s)", count, stats.Get("eventsCollected").String())
+			}
 		}
 
 		for {
@@ -84,8 +87,7 @@ func (this *Batcher) Start(errChan chan<- error) error {
 					save()
 				}
 
-			case <-timer.C:
-				//				log.Println("timeout")
+			case <-timer.C: // Timeout
 				save()
 			}
 		}

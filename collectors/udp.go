@@ -2,13 +2,13 @@ package collectors
 
 import (
 	"bytes"
+	"expvar"
 	"fmt"
 	"log"
 	"net"
 	"strconv"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/devlang2/agent_manager/event"
 	"github.com/devlang2/golibs/encryption"
 )
@@ -18,9 +18,10 @@ const (
 )
 
 var (
-	iv  = []byte("2981eeca66b5c3cd")                 // internal vector
-	key = []byte("c43ac86d84469030f28c0a9656b1c533") // key
-	fs  = []byte("|")                                // field separator
+	iv    = []byte("2981eeca66b5c3cd")                 // internal vector
+	key   = []byte("c43ac86d84469030f28c0a9656b1c533") // key
+	fs    = []byte("|")                                // field separator
+	stats = expvar.NewMap("udp")
 )
 
 type UDPCollector struct {
@@ -53,19 +54,13 @@ func (s *UDPCollector) Start(c chan<- *event.Agent) error {
 
 			agent, err := parse(data_dec)
 			if err != nil {
-				spew.Println("################################### Start")
 				log.Printf("Parse error: " + err.Error())
-				spew.Dump(buf[:n])
-				//				spew.Println(string(b))
-				spew.Dump(data_dec)
-				spew.Dump(string(data_dec))
-				spew.Println("################################### End")
+				log.Printf("Data: ", string(buf[:n]))
+				stats.Add("parseFailed", 1)
 				continue
 			}
 			agent.IP = addr.IP
 			c <- agent
-			//			buf = nil
-			//			buf = make([]byte, msgBufSize)
 		}
 	}()
 	return nil
