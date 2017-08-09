@@ -28,7 +28,7 @@ const (
 	DefaultBatchMaxPending = 10000
 	DefaultUDPPort         = ":19902"
 	DefaultInputFormat     = "syslog"
-	DefaultMonitorIface    = "localhost:8080"
+	DefaultMonitorIface    = ":8080"
 )
 
 var (
@@ -48,6 +48,7 @@ type Config struct {
 
 func main() {
 	runtime.GOMAXPROCS(1)
+	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 
 	// Flag set
 	fs = flag.NewFlagSet("", flag.ExitOnError)
@@ -64,17 +65,7 @@ func main() {
 	fs.Usage = printHelp
 	fs.Parse(os.Args[1:])
 
-	// Load configuration
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	configPath := dir + string(os.PathSeparator) + "config.json"
-	//	log.Printf(configPath)
-
-	config, err := loadConfig(configPath)
-	if err != nil {
-		os.Exit(3)
-	}
-
-	// Set log output
+	// Set multiwriter logging
 	//	mw := io.MultiWriter(os.Stderr, &lumberjack.Logger{
 	//		Filename:   dir + string(os.PathSeparator) + "server.log",
 	//		MaxSize:    1, // MB
@@ -82,15 +73,20 @@ func main() {
 	//		MaxAge:     1, //days
 	//	})
 	//	log.SetOutput(mw)
-
 	log.SetOutput(&lumberjack.Logger{
-		Filename:   dir + string(os.PathSeparator) + "server.log",
+		Filename:   dir + string(os.PathSeparator) + "ams.log",
 		MaxSize:    1, // MB
 		MaxBackups: 3,
 		MaxAge:     1, //days
 	})
-
 	log.Printf("Starting server.. (batchSize: %d, batchDuration: %dms, batchMaxPending: %d)\n", *batchSize, *batchDuration, *batchMaxPending)
+
+	// Load configuration
+	configPath := dir + string(os.PathSeparator) + "config.json"
+	config, err := loadConfig(configPath)
+	if err != nil {
+		os.Exit(3)
+	}
 
 	// Start engine
 	duration := time.Duration(*batchDuration) * time.Millisecond
