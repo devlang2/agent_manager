@@ -5,7 +5,7 @@ import (
 	"expvar"
 	"flag"
 	"fmt"
-	"io"
+	//	"io"
 	"log"
 	"net/http"
 	"os"
@@ -67,7 +67,7 @@ func main() {
 	// Load configuration
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	configPath := dir + string(os.PathSeparator) + "config.json"
-	log.Printf(configPath)
+	//	log.Printf(configPath)
 
 	config, err := loadConfig(configPath)
 	if err != nil {
@@ -75,13 +75,20 @@ func main() {
 	}
 
 	// Set log output
-	mw := io.MultiWriter(os.Stderr, &lumberjack.Logger{
+	//	mw := io.MultiWriter(os.Stderr, &lumberjack.Logger{
+	//		Filename:   dir + string(os.PathSeparator) + "server.log",
+	//		MaxSize:    1, // MB
+	//		MaxBackups: 3,
+	//		MaxAge:     1, //days
+	//	})
+	//	log.SetOutput(mw)
+
+	log.SetOutput(&lumberjack.Logger{
 		Filename:   dir + string(os.PathSeparator) + "server.log",
 		MaxSize:    1, // MB
 		MaxBackups: 3,
 		MaxAge:     1, //days
 	})
-	log.SetOutput(mw)
 
 	log.Printf("Starting server.. (batchSize: %d, batchDuration: %dms, batchMaxPending: %d)\n", *batchSize, *batchDuration, *batchMaxPending)
 

@@ -9,6 +9,10 @@ start)
     ${APP_PATH}/ams &
     echo $!>${APP_PID}
     ;;
+debug)
+    ${APP_PATH}/ams -debug &
+    echo $!>${APP_PID}
+    ;;
 stop)
     if [ -e ${APP_PID} ]; then
         kill `cat ${APP_PID}`
