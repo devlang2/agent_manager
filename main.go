@@ -65,24 +65,18 @@ func main() {
 	fs.Parse(os.Args[1:])
 
 	// Load configuration
-	configPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	if runtime.GOOS == "windows" {
-		configPath += "\\config.json"
-	} else {
-		configPath += "/config.json"
-	}
+	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	configPath := dir + string(os.PathSeparator) + "config.json"
 	log.Printf(configPath)
 
 	config, err := loadConfig(configPath)
 	if err != nil {
-		//		panic(err.Error())
-		//		os.exit(3)
 		os.Exit(3)
 	}
 
 	// Set log output
 	mw := io.MultiWriter(os.Stderr, &lumberjack.Logger{
-		Filename:   "server.log",
+		Filename:   dir + string(os.PathSeparator) + "server.log",
 		MaxSize:    1, // MB
 		MaxBackups: 3,
 		MaxAge:     1, //days
