@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/devlang2/agent_manager/event"
 	"github.com/devlang2/golibs/encryption"
 )
@@ -53,6 +54,7 @@ func (s *UDPCollector) Start(c chan<- *event.Agent) error {
 			}
 
 			agent, err := parse(data_dec)
+			spew.Dump(agent)
 			if err != nil {
 				log.Printf("Parse error: " + err.Error())
 				log.Printf("Data: ", string(buf[:n]))
