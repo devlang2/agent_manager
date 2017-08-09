@@ -59,24 +59,32 @@ func (this *Batcher) Start(errChan chan<- error, debug *bool) error {
 
 		queue := make([]*event.Agent, 0, this.size)
 		save := func() {
+			count := int64(len(queue))
+			stats.Add("eventsCollected", count)
+
 			_, err := insert(queue)
-			if err != nil {
+			if err == nil {
+
+			} else {
+				//				writeToFile(queue)
 				stats.Add("insertFailed", 1)
 				errChan <- err
 				return
 			}
-			count := int64(len(queue))
-			stats.Add("eventsCollected", count)
+			if *debug {
+				log.Printf("Collected: %d (Total: %s)", count, stats.Get("eventsCollected").String())
+			}
+
 			queue = make([]*event.Agent, 0, this.size)
 
-			if *debug {
-				log.Printf("Updated: %d (Total: %s)", count, stats.Get("eventsCollected").String())
-			}
 		}
 
 		for {
 			select {
 			case event := <-this.c:
+				if *debug {
+					log.Printf("Data")
+				}
 				queue = append(queue, event)
 				if len(queue) == 1 {
 					timer.Reset(this.duration)
@@ -99,6 +107,29 @@ func (this *Batcher) Start(errChan chan<- error, debug *bool) error {
 func (b *Batcher) C() chan<- *event.Agent {
 	return b.c
 }
+
+//func writeToFile(queue []*event.Agent) {
+//	fp := "temp/" + time.Now().Format(LOGFILETIME) + "0.log"
+//	f, _ := os.OpenFile(fp, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+//	defer f.Close()
+
+//	for _, a := range queue {
+//		q := fmt.Sprintf("%s\t%d\t%.1f\t%d\t%d\t%s\t%s\t%s\t%s\t%s\t%s\n",
+//			a.Guid,
+//			network.IpToInt32(a.IP),
+//			a.OsVersionNumber,
+//			a.OsBit,
+//			a.OsIsServer,
+//			a.ComputerName,
+//			a.Eth,
+//			a.FullPolicyVersion,
+//			a.TodayPolicyVersion,
+//			a.Rdate.Format(YYYYMMDDHH24MISS),
+//			a.Udate.Format(YYYYMMDDHH24MISS),
+//		)
+//		f.WriteString(q)
+//	}
+//}
 
 func insert(queue []*event.Agent) (sql.Result, error) {
 	var arr []string
