@@ -162,17 +162,18 @@ func saveAsFile(datadir string, queue []*event.Agent) (*os.File, error) {
 	return tmpfile, nil
 }
 
-func InitDatabase(dataSourceName string) {
+func InitDatabase(dataSourceName string) error {
 	var err error
 	db, err = sql.Open("mysql", dataSourceName)
 	if err != nil {
-		log.Panic(err)
+		return err
 	}
 
 	if err = db.Ping(); err != nil {
-		log.Panic(err)
+		return err
 	}
 
 	db.SetMaxIdleConns(3)
 	db.SetMaxOpenConns(3)
+	return nil
 }

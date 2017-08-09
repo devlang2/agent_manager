@@ -10,7 +10,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
+	//	"strings"
 	"syscall"
 	"time"
 
@@ -63,9 +65,19 @@ func main() {
 	fs.Parse(os.Args[1:])
 
 	// Load configuration
-	config, err := loadConfig("config.json")
+	configPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	if runtime.GOOS == "windows" {
+		configPath += "\\config.json"
+	} else {
+		configPath += "/config.json"
+	}
+	log.Printf(configPath)
+
+	config, err := loadConfig(configPath)
 	if err != nil {
-		panic(err.Error())
+		//		panic(err.Error())
+		//		os.exit(3)
+		os.Exit(3)
 	}
 
 	// Set log output
@@ -88,7 +100,10 @@ func main() {
 
 	// Connect to database
 	connStr := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&allowAllFiles=true", config.Database.Username, config.Database.Password, config.Database.Host, config.Database.Port, config.Database.Database)
-	engine.InitDatabase(connStr)
+	err = engine.InitDatabase(connStr)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
 	// Start UDP collector
 	if err := startUDPCollector(*udpIface, *inputFormat, batcher); err != nil {
