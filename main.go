@@ -45,7 +45,7 @@ type Config struct {
 }
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	runtime.GOMAXPROCS(1)
 
 	// Flag set
 	fs = flag.NewFlagSet("", flag.ExitOnError)
