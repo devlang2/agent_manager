@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/devlang2/agent_manager/event"
-	"github.com/devlang2/golibs/crypto"
+	"github.com/devplayg/agent_manager/event"
+	"github.com/devplayg/golibs/crypto"
 )
 
 const (

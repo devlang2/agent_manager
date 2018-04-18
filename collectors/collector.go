@@ -6,7 +6,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/devlang2/agent_manager/event"
+	"github.com/devplayg/agent_manager/event"
 )
 
 type Collector interface {

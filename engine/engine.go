@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/devlang2/agent_manager/event"
-	"github.com/devlang2/golibs/network"
+	"github.com/devplayg/agent_manager/event"
+	"github.com/devplayg/golibs/network"
 	_ "github.com/go-sql-driver/mysql"
 )
 

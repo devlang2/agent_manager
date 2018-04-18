@@ -12,12 +12,11 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
-	//	"strings"
 	"syscall"
 	"time"
 
-	"github.com/devlang2/agent_manager/collectors"
-	"github.com/devlang2/agent_manager/engine"
+	"github.com/devplayg/agent_manager/collectors"
+	"github.com/devplayg/agent_manager/engine"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -85,6 +84,7 @@ func main() {
 	configPath := dir + string(os.PathSeparator) + "config.json"
 	config, err := loadConfig(configPath)
 	if err != nil {
+		log.Println("[error] "+ err.Error())
 		os.Exit(3)
 	}
 
