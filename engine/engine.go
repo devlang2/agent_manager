@@ -13,7 +13,6 @@ import (
 	"github.com/devlang2/agent_manager/event"
 	"github.com/devlang2/golibs/network"
 	_ "github.com/go-sql-driver/mysql"
-	//	"github.com/op/go-logging"
 )
 
 var (

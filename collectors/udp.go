@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/devlang2/agent_manager/event"
-	"github.com/devlang2/golibs/encryption"
+	"github.com/devlang2/golibs/crypto"
 )
 
 const (
-	msgBufSize = 1024
+	msgBufSize = 2048
 )
 
 var (
@@ -46,7 +46,7 @@ func (s *UDPCollector) Start(c chan<- *event.Agent) error {
 			}
 
 			data_enc := append(iv, buf[:n]...)
-			data_dec, err := encryption.Decrypt(key, data_enc)
+			data_dec, err := crypto.DecAes256(key, data_enc)
 			if err != nil {
 				log.Printf("Decryption error: " + err.Error())
 				continue
